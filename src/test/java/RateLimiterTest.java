@@ -23,7 +23,7 @@ public class RateLimiterTest {
     private long fillTime = 0;
 
     @Before
-    public void before() throws Exception {
+    public void before() {
         limiter = new RateLimiter(interval, increment, maxCapacity);
         limiter.stopSupply();
         limiter.debug = true;
@@ -31,8 +31,8 @@ public class RateLimiterTest {
     }
 
     /**
-     * 填满bucket
-     * @throws Exception
+     * Wait until bucket is full
+     * @throws Exception Thread interrupted
      */
     private void waitUntilFull() throws Exception {
         try {
@@ -223,11 +223,9 @@ public class RateLimiterTest {
             };
             r.run();
             assertEquals(limiter.getCapacity(), maxCapacity - (maxCapacity / 4));
-            Runnable r2 = () -> {
-                assertEquals(limiter.acquire(
-                        maxCapacity),
-                        interval * (long)(Math.ceil((double)(maxCapacity / 4) / increment)));
-            };
+            Runnable r2 = () -> assertEquals(limiter.acquire(
+                    maxCapacity),
+                    interval * (long)(Math.ceil((double)(maxCapacity / 4) / increment)));
             r2.run();
             assertEquals(limiter.getCapacity(), -maxCapacity / 4);
         }
