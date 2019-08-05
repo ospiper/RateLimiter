@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class RateLimiter {
 
+    public boolean debug = true;
     private final AtomicLong bucket;
     private final Observable<Long> supplier;
     private Disposable subscriber;
@@ -51,12 +52,15 @@ public class RateLimiter {
         System.out.println(String.format("Acquiring %d tokens", count));
         if (!checkPermits(count)) throw new IllegalArgumentException("Acquirement must > 0");
         long shouldSleep = preserve(count);
-        System.out.println(String.format("Sleep %d ms", shouldSleep));
-        try {
-            TimeUnit.MILLISECONDS.sleep(shouldSleep);
-        }
-        catch (InterruptedException ex) {
-            ex.printStackTrace();
+        if (shouldSleep > 0) {
+            try {
+                System.out.println(String.format("Sleep %d ms", shouldSleep));
+                TimeUnit.MILLISECONDS.sleep(shouldSleep);
+            }
+            catch (InterruptedException ex) {
+                ex.printStackTrace();
+                return -1;
+            }
         }
         System.out.println(String.format("%d tokens acquired", count));
         printBucket();
@@ -93,7 +97,7 @@ public class RateLimiter {
     }
 
     private void printBucket() {
-        System.out.println(String.format("%d Bucket = %d", System.currentTimeMillis(), bucket.get()));
+        if (debug) System.out.println(String.format("%d Bucket = %d", System.currentTimeMillis(), bucket.get()));
     }
 
     public void stopSupply() {
