@@ -11,7 +11,7 @@ import static org.junit.Assert.*;
 * RateLimiter Tester. 
 * 
 * @author LLAP
-* @since <pre>8�� 5, 2019</pre> 
+* @since <pre>Aug 5, 2019</pre>
 * @version 1.0 
 */ 
 public class RateLimiterTest { 
