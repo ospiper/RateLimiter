@@ -18,6 +18,12 @@ public class RateLimiter {
     private final long increment;
     private final long maxCapacity;
 
+    /**
+     *
+     * @param interval 指定间隔多久补充一次令牌
+     * @param increment 每次补充多少令牌
+     * @param maxCapacity 桶的最大容量
+     */
     public RateLimiter(long interval, long increment, long maxCapacity) {
         this.interval = interval;
         this.increment = increment;
@@ -48,6 +54,13 @@ public class RateLimiter {
         return arg > 0;
     }
 
+    /**
+     * 获取指定数量的令牌
+     * 若桶中令牌数量不足，则将所有令牌扣除，并为此请求阻塞至补充到足够数量的令牌
+     * @param count 令牌数量
+     * @return 需要阻塞的毫秒数（不需要阻塞返回零，获取失败返回-1）
+     * @throws IllegalArgumentException count参数小于等于零
+     */
     public long acquire(long count) throws IllegalArgumentException {
         System.out.println(String.format("Acquiring %d tokens", count));
         if (!checkPermits(count)) throw new IllegalArgumentException("Acquirement must > 0");
@@ -67,6 +80,11 @@ public class RateLimiter {
         return shouldSleep;
     }
 
+    /**
+     * 从桶中扣除相应数量的令牌
+     * @param count 扣除的令牌数量
+     * @return 要阻塞的毫秒数
+     */
     private long preserve(long count) {
         synchronized (bucket) {
             System.out.println(String.format("Bucket = %d", bucket.get()));
@@ -78,9 +96,11 @@ public class RateLimiter {
             System.out.println(String.format("Bucket - %d = %d", count, bucket.get()));
             return ret;
         }
-
     }
 
+    /**
+     * 开始定时补充令牌
+     */
     public void startSupply() {
         System.out.println("Starting supplier");
         if (this.subscriber == null || this.subscriber.isDisposed()) {
@@ -100,6 +120,9 @@ public class RateLimiter {
         if (debug) System.out.println(String.format("%d Bucket = %d", System.currentTimeMillis(), bucket.get()));
     }
 
+    /**
+     * 停止定时补充令牌
+     */
     public void stopSupply() {
         if (subscriber != null && !subscriber.isDisposed()) {
             subscriber.dispose();
@@ -114,6 +137,11 @@ public class RateLimiter {
         stopSupply();
     }
 
+    /**
+     * 补充令牌
+     * @param increment 补充的数量
+     * @return 桶中剩余的令牌数
+     */
     private long supply(long increment) {
         synchronized (bucket) {
             long bucketHas = bucket.get();
